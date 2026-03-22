@@ -1,225 +1,82 @@
-import { useEffect, useRef, useState, MutableRefObject } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface SlippagePanelProps {
   pythPrice: number;
-  dexPriceRef: MutableRefObject<number>;
+  dexPriceRef: React.MutableRefObject<number>;
   isTriggered: boolean;
 }
 
-// ────────────────────────────────────────────────────────
-// El panel compara:
-//   Pyth Lazer  → precio actual (400ms de latencia)
-//   DEX ficticio → precio con 2 segundos de delay
-//
-// Slippage ahorrado = |dexPrice - pythPrice| por unidad
-// En dólares: asumimos una venta de 10,000 ADA
-// ────────────────────────────────────────────────────────
+export default function SlippagePanel({ pythPrice, dexPriceRef, isTriggered }: SlippagePanelProps) {
+  const [sessionSavings, setSessionSavings] = useState(0);
 
-const SIMULATED_ADA_AMOUNT = 10_000;
-const DEX_REFRESH_INTERVAL = 2000; // ms — delay del DEX
+  const dexPrice = dexPriceRef.current;
+  const slippage = Math.abs(pythPrice - dexPrice);
+  const slippagePct = (slippage / pythPrice) * 100;
 
-export default function SlippagePanel({
-  pythPrice,
-  dexPriceRef,
-  isTriggered,
-}: SlippagePanelProps) {
-  const [dexDisplayPrice, setDexDisplayPrice] = useState(pythPrice);
-  const [slippageSaved, setSlippageSaved]     = useState(0);
-  const [totalSaved, setTotalSaved]           = useState(0);
-  const totalSavedRef = useRef(0);
-
-  // El DEX price se actualiza cada 2 segundos (delay simulado)
   useEffect(() => {
-    const id = setInterval(() => {
-      const dex = dexPriceRef.current || pythPrice;
-      setDexDisplayPrice(dex);
-      const diff = Math.abs(pythPrice - dex) * SIMULATED_ADA_AMOUNT;
-      setSlippageSaved(diff);
-      if (isTriggered && diff > 0) {
-        totalSavedRef.current += diff * 0.1; // acumula un 10% en cada evento
-        setTotalSaved(totalSavedRef.current);
-      }
-    }, DEX_REFRESH_INTERVAL);
-    return () => clearInterval(id);
-  }, [pythPrice, dexPriceRef, isTriggered]);
-
-  const priceDiff     = dexDisplayPrice - pythPrice;
-  const pythIsLower   = pythPrice <= dexDisplayPrice;
-  const slippagePct   = dexDisplayPrice > 0
-    ? ((Math.abs(priceDiff) / dexDisplayPrice) * 100).toFixed(3)
-    : "0.000";
+    if (isTriggered && slippage > 0) {
+      setSessionSavings((prev) => prev + slippage * 100); // Simula impacto en 100 ADA
+    }
+  }, [isTriggered, slippage]);
 
   return (
-    <div
-      className="glass-card"
-      style={{
-        padding: "24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-      }}
-    >
-      {/* Header */}
+    <div className="curator-card" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <div>
-        <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>
-          Slippage Prevention
-        </h2>
-        <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 3 }}>
-          Pyth Lazer vs. DEX on-chain · {SIMULATED_ADA_AMOUNT.toLocaleString()} ADA
-        </p>
+        <h3 className="text-editorial" style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>Market Intelligence</h3>
+        <p className="text-muted">Real-time comparison between Pyth Lazer and on-chain DEX providers.</p>
       </div>
 
-      <div style={{ height: 1, background: "var(--border-glass)" }} />
-
-      {/* Comparación de precios */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-
-        {/* Pyth Lazer */}
-        <div
-          style={{
-            background: "var(--pyth-orange-dim)",
-            border: "1px solid var(--border-orange)",
-            borderRadius: "var(--radius-md)",
-            padding: "12px 16px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <p style={{ fontSize: "0.68rem", color: "var(--pyth-orange)", marginBottom: 3, fontWeight: 600 }}>
-              ⚡ Pyth Lazer
-            </p>
-            <p style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>~400ms latencia</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {/* Comparison Card */}
+        <div style={{ padding: "1.25rem", borderRadius: "16px", background: "var(--surface-container-low)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
+            <span style={{ fontSize: "0.875rem", fontWeight: 600 }}>Pyth Lazer (HQ)</span>
+            <span style={{ fontFamily: "monospace", color: "var(--primary)", fontWeight: 700 }}>${pythPrice.toFixed(6)}</span>
           </div>
-          <p
-            className="mono"
-            style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--pyth-orange)" }}
-          >
-            ${pythPrice.toFixed(6)}
-          </p>
-        </div>
-
-        {/* DEX ficticio */}
-        <div
-          style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid var(--border-glass)",
-            borderRadius: "var(--radius-md)",
-            padding: "12px 16px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <p style={{ fontSize: "0.68rem", color: "var(--text-secondary)", marginBottom: 3, fontWeight: 600 }}>
-              🔀 DEX On-chain
-            </p>
-            <p style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>~2000ms latencia</p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: "0.875rem", color: "var(--outline)" }}>Standard DEX</span>
+            <span style={{ fontFamily: "monospace", color: "var(--outline)" }}>${dexPrice.toFixed(6)}</span>
           </div>
-          <p
-            className="mono"
-            style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-secondary)" }}
-          >
-            ${dexDisplayPrice.toFixed(6)}
-          </p>
+        </div>
+
+        {/* Savings Insight */}
+        <div style={{ padding: "1.25rem", borderRadius: "16px", background: "var(--surface-container-highest)", position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <p className="text-muted" style={{ fontSize: "0.75rem", textTransform: "uppercase", fontWeight: 700, marginBottom: "0.5rem" }}>
+              Slippage Prevention
+            </p>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem" }}>
+              <span className="text-editorial" style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--primary)" }}>
+                {slippagePct.toFixed(3)}%
+              </span>
+              <span className="text-muted">Optimized</span>
+            </div>
+          </div>
+          {/* Subtle background glow */}
+          <div style={{ position: "absolute", top: "-20px", right: "-20px", width: "80px", height: "80px", background: "var(--primary-container)", opacity: 0.15, borderRadius: "50%", filter: "blur(20px)" }} />
         </div>
       </div>
 
-      {/* Diferencia */}
-      <div
-        style={{
-          background: "rgba(255,255,255,0.03)",
-          borderRadius: "var(--radius-md)",
-          padding: "14px 16px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div>
-          <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginBottom: 3 }}>
-            Diferencia de precio
-          </p>
-          <p style={{ fontSize: "0.68rem", color: "var(--text-muted)" }}>
-            {pythIsLower ? "Pyth más preciso ✓" : "Precios igualados"}
-          </p>
-        </div>
-        <div style={{ textAlign: "right" }}>
-          <p
-            className="mono"
-            style={{
-              fontSize: "1rem",
-              fontWeight: 700,
-              color: pythIsLower ? "var(--green-safe)" : "var(--text-secondary)",
-            }}
+      <div style={{ marginTop: "auto", paddingTop: "1.5rem", borderTop: "1px solid var(--surface-container)" }}>
+        <p className="text-muted" style={{ marginBottom: "0.5rem" }}>Total Protection Impact</p>
+        <AnimatePresence mode="popLayout">
+          <motion.div
+            key={sessionSavings}
+            initial={{ y: 5, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--on-background)" }}
           >
-            {pythIsLower ? "-" : "+"}${Math.abs(priceDiff).toFixed(6)}
-          </p>
-          <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: 2 }}>
-            {slippagePct}% slippage
-          </p>
-        </div>
-      </div>
-
-      {/* Ahorro en USD */}
-      <div
-        style={{
-          background: isTriggered ? "var(--green-safe-dim)" : "rgba(255,255,255,0.03)",
-          border: `1px solid ${isTriggered ? "var(--green-safe-glow)" : "var(--border-glass)"}`,
-          borderRadius: "var(--radius-md)",
-          padding: "14px 16px",
-          transition: "all var(--transition-base)",
-        }}
-      >
-        <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginBottom: 8 }}>
-          💰 Ahorro potencial por Flash Crash ({SIMULATED_ADA_AMOUNT.toLocaleString()} ADA)
-        </p>
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={slippageSaved.toFixed(4)}
-            initial={{ opacity: 0.4, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mono"
-            style={{
-              fontSize: "1.6rem",
-              fontWeight: 800,
-              color: isTriggered ? "var(--green-safe)" : "var(--text-primary)",
-            }}
-          >
-            ${slippageSaved.toFixed(2)}
-          </motion.p>
+            ${sessionSavings.toFixed(2)} <span style={{ fontSize: "0.875rem", fontWeight: 400, color: "var(--outline)" }}>Saved</span>
+          </motion.div>
         </AnimatePresence>
-        <p style={{ fontSize: "0.65rem", color: "var(--text-muted)", marginTop: 4 }}>
-          vs. esperar confirmación del DEX
-        </p>
       </div>
 
-      {/* Acumulado de sesión */}
-      {totalSaved > 0 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          style={{
-            background: "var(--green-safe-dim)",
-            border: "1px solid var(--green-safe-glow)",
-            borderRadius: "var(--radius-md)",
-            padding: "10px 16px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <p style={{ fontSize: "0.68rem", color: "var(--green-safe)" }}>
-            🏦 Total ahorrado esta sesión
-          </p>
-          <p className="mono" style={{ fontSize: "1rem", fontWeight: 800, color: "var(--green-safe)" }}>
-            ${totalSaved.toFixed(2)}
-          </p>
-        </motion.div>
-      )}
+      <div style={{ padding: "1rem", borderRadius: "12px", background: "rgba(101, 73, 192, 0.05)", border: "1px solid rgba(101, 73, 192, 0.1)" }}>
+        <p style={{ fontSize: "0.75rem", color: "var(--primary)", fontWeight: 600, lineHeight: 1.4 }}>
+          "Using sub-second feeds ensures you exit before flash crash slippage occurs."
+        </p>
+      </div>
     </div>
   );
 }

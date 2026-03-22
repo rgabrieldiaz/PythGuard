@@ -5,8 +5,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ReferenceLine,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 import { PriceDataPoint } from "../App";
 
@@ -16,136 +16,91 @@ interface PriceChartProps {
   isTriggered: boolean;
 }
 
-interface TooltipPayload {
-  value: number;
-  name: string;
-}
-
-// Custom Tooltip
-function CustomTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: TooltipPayload[];
-  label?: string;
-}) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div
-      style={{
-        background: "rgba(10, 14, 23, 0.95)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: 10,
-        padding: "10px 14px",
-        fontFamily: "var(--font-mono)",
-        fontSize: "0.8rem",
-      }}
-    >
-      <p style={{ color: "var(--text-secondary)", marginBottom: 6 }}>{label}</p>
-      <p style={{ color: "var(--pyth-orange)", fontWeight: 700 }}>
-        ${Number(payload[0].value).toFixed(6)} USD
-      </p>
-    </div>
-  );
-}
-
 export default function PriceChart({ data, threshold, isTriggered }: PriceChartProps) {
-  const lineColor    = isTriggered ? "var(--red-danger)"  : "var(--pyth-orange)";
-  const gradientTop  = isTriggered ? "rgba(239,68,68,0.3)" : "rgba(230,130,30,0.25)";
-  const gradientBot  = "transparent";
-
-  const prices = data.map((d) => d.price);
-  const minY   = Math.min(...prices, threshold) * 0.985;
-  const maxY   = Math.max(...prices) * 1.015;
+  const chartColor = isTriggered ? "var(--error)" : "var(--primary)";
+  const areaColor  = isTriggered ? "var(--error-container)" : "var(--primary-container)";
 
   return (
-    <div className="glass-card" style={{ padding: "24px" }}>
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 20,
-        }}
-      >
-        <div>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600 }}>
-            ADA/USD — Precio en vivo
-          </h2>
-          <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: 3 }}>
-            Últimas {data.length} actualizaciones · intervalo 400ms
-          </p>
-        </div>
-        <div className="badge" style={{
-          background: "var(--pyth-orange-dim)",
-          color: "var(--pyth-orange)",
-          border: "1px solid var(--border-orange)",
-          fontSize: "0.68rem",
-        }}>
-          ⚡ Pyth Lazer
+    <div className="curator-card" style={{ height: "450px", display: "flex", flexDirection: "column" }}>
+      <div style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+        <h3 className="text-editorial" style={{ fontSize: "1.25rem", color: "var(--on-background)" }}>
+          ADA Evolution <span className="text-muted" style={{ fontWeight: 400, marginLeft: "0.5rem" }}>— 400ms interval</span>
+        </h3>
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <span style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--primary)" }}></span>
+            Market Price
+          </span>
+          <span style={{ fontSize: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--error)" }}></span>
+            Target Protection
+          </span>
         </div>
       </div>
 
-      {/* Chart */}
-      <ResponsiveContainer width="100%" height={260}>
-        <AreaChart data={data} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
-          <defs>
-            <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor={gradientTop} />
-              <stop offset="100%" stopColor={gradientBot} />
-            </linearGradient>
-          </defs>
-
-          <CartesianGrid strokeDasharray="3 3" />
-
-          <XAxis
-            dataKey="time"
-            tick={{ fill: "var(--text-muted)", fontSize: 10, fontFamily: "var(--font-mono)" }}
-            tickLine={false}
-            axisLine={false}
-            interval="preserveStartEnd"
-          />
-
-          <YAxis
-            domain={[minY, maxY]}
-            tickFormatter={(v: number) => `$${v.toFixed(3)}`}
-            tick={{ fill: "var(--text-muted)", fontSize: 10, fontFamily: "var(--font-mono)" }}
-            tickLine={false}
-            axisLine={false}
-            width={68}
-          />
-
-          <Tooltip content={<CustomTooltip />} />
-
-          {/* Línea de threshold */}
-          <ReferenceLine
-            y={threshold}
-            stroke="rgba(239,68,68,0.7)"
-            strokeDasharray="5 4"
-            label={{
-              position: "insideTopRight",
-              value: `Stop $${threshold}`,
-              fill: "var(--red-danger)",
-              fontSize: 10,
-              fontFamily: "var(--font-mono)",
-            }}
-          />
-
-          <Area
-            type="monotone"
-            dataKey="price"
-            stroke={lineColor}
-            strokeWidth={2}
-            fill="url(#priceGradient)"
-            dot={false}
-            animationDuration={200}
-            isAnimationActive={true}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      <div style={{ flex: 1, width: "100%" }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={chartColor} stopOpacity={0.15} />
+                <stop offset="95%" stopColor={chartColor} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--surface-container)" />
+            <XAxis
+              dataKey="time"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "var(--outline)", fontSize: 10, fontFamily: "var(--font-body)" }}
+              interval="preserveStartEnd"
+              minTickGap={30}
+            />
+            <YAxis
+              domain={["auto", "auto"]}
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: "var(--outline)", fontSize: 10, fontFamily: "var(--font-body)" }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "var(--surface-container-lowest)",
+                border: "none",
+                borderRadius: "12px",
+                boxShadow: "0 10px 30px rgba(101, 73, 192, 0.12)",
+                fontFamily: "var(--font-body)",
+                fontSize: "12px",
+              }}
+              itemStyle={{ color: "var(--primary)", fontWeight: 700 }}
+              labelStyle={{ color: "var(--outline)", marginBottom: "4px" }}
+            />
+            <ReferenceLine
+              y={threshold}
+              stroke="var(--error)"
+              strokeDasharray="4 4"
+              strokeWidth={1}
+              label={{
+                value: "Protection Target",
+                position: "right",
+                fill: "var(--error)",
+                fontSize: 9,
+                fontWeight: 700,
+                offset: 10,
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="price"
+              stroke={chartColor}
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorPrice)"
+              animationDuration={300}
+              isAnimationActive={false} // Performance optimize for 400ms updates
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

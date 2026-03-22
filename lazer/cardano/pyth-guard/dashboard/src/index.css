@@ -1,192 +1,195 @@
 /* ============================================================
    PythGuard Dashboard — Global Styles
-   Diseño: Dark Glassmorphism + Pyth Orange Branding
+   Diseño: Digital Curator (Editorial High-End)
+   Inspirado en Google Stitch Design System
    ============================================================ */
 
 :root {
-  /* Pyth Brand Colors */
-  --pyth-orange: #e6821e;
-  --pyth-orange-glow: rgba(230, 130, 30, 0.35);
-  --pyth-orange-dim: rgba(230, 130, 30, 0.12);
+  /* Digital Curator Palette */
+  --primary: #6549c0;
+  --primary-container: #9b80fa;
+  --primary-dim: #593cb3;
+  --on-primary: #fdf7ff;
+  
+  --secondary: #5f4dbf;
+  --secondary-container: #e5deff;
+  
+  --background: #faf8ff;
+  --on-background: #2f323d;
+  
+  /* Surface Hierarchy (No-Line Rule) */
+  --surface: #faf8ff;
+  --surface-bright: #faf8ff;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f3f3fd;
+  --surface-container: #ecedf9;
+  --surface-container-high: #e6e7f4;
+  --surface-container-highest: #e0e2f0;
+  --surface-dim: #d7d9e8;
+  
+  --outline: #777a87;
+  --outline-variant: rgba(175, 177, 191, 0.15); /* Ghost Border */
 
-  /* Backgrounds */
-  --bg-base: #080a0f;
-  --bg-layer-1: #0d1117;
-  --bg-layer-2: #111827;
-  --bg-glass: rgba(16, 24, 40, 0.6);
-  --bg-glass-hover: rgba(22, 33, 55, 0.75);
-
-  /* Borders */
-  --border-glass: rgba(255, 255, 255, 0.07);
-  --border-orange: rgba(230, 130, 30, 0.35);
-
-  /* Text */
-  --text-primary: #f0f4ff;
-  --text-secondary: #8b9bb8;
-  --text-muted: #4a5568;
-
-  /* Status Colors */
-  --green-safe: #22c55e;
-  --green-safe-glow: rgba(34, 197, 94, 0.3);
-  --green-safe-dim: rgba(34, 197, 94, 0.1);
-  --red-danger: #ef4444;
-  --red-danger-glow: rgba(239, 68, 68, 0.35);
-  --red-danger-dim: rgba(239, 68, 68, 0.1);
+  /* Status Colors (Tonal Range) */
+  --success: #6549c0; /* Use lavender for branded success */
+  --error: #a8364b;
+  --error-container: #f97386;
 
   /* Typography */
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
-
-  /* Spacing & Sizing */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --font-editorial: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, sans-serif;
 
   /* Transitions */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ---- Reset ---- */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html {
-  font-size: 16px;
-  scroll-behavior: smooth;
-}
-
 body {
-  font-family: var(--font-sans);
-  background-color: var(--bg-base);
-  color: var(--text-primary);
+  font-family: var(--font-body);
+  background-color: var(--background);
+  color: var(--on-background);
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ---- Background Mesh ---- */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% -10%, rgba(230, 130, 30, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 80% 110%, rgba(99, 102, 241, 0.06) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
+/* ---- Layout Spacing ---- */
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
-#root {
-  position: relative;
-  z-index: 1;
+/* ---- Digital Curator Card (No-Line Rule) ---- */
+.curator-card {
+  background: var(--surface-container-lowest);
+  border-radius: 24px; /* xl radius */
+  padding: 24px;
+  transition: transform var(--transition-base), background var(--transition-base);
+  /* No border by default, use tonal nesting */
 }
 
-/* ---- Glass Card ---- */
-.glass-card {
-  background: var(--bg-glass);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  transition: border-color var(--transition-base), background var(--transition-base);
-}
-
-.glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: var(--bg-glass-hover);
+.curator-card:hover {
+  background: var(--surface-container-low);
+  transform: translateY(-4px);
 }
 
 /* ---- Typography ---- */
 h1, h2, h3 {
-  font-weight: 700;
+  font-family: var(--font-editorial);
+  font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.1;
 }
 
-.mono {
-  font-family: var(--font-mono);
+.text-editorial {
+  font-family: var(--font-editorial);
 }
 
-/* ---- Badge Base ---- */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
+.text-muted {
+  color: #5c5f6b;
+  font-size: 0.875rem;
+}
+
+.title-lg { font-size: 3.5rem; }
+.title-md { font-size: 2.25rem; }
+.title-sm { font-size: 1.5rem; }
+
+/* ---- Buttons (Gradient & Pill) ---- */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-container));
+  color: var(--on-primary);
+  border: none;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  font-family: var(--font-editorial);
   font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity var(--transition-base);
 }
 
-/* ---- Scrollbar ---- */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-layer-1);
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+.btn-primary:hover {
+  opacity: 0.9;
 }
 
-/* ---- Pulse Animations ---- */
-@keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 0 0 var(--green-safe-glow); }
-  50%       { box-shadow: 0 0 0 10px transparent; }
-}
-@keyframes pulse-red {
-  0%, 100% { box-shadow: 0 0 0 0 var(--red-danger-glow); }
-  50%       { box-shadow: 0 0 0 14px transparent; }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-4px); }
-}
-@keyframes number-tick {
-  from { opacity: 0.4; transform: translateY(4px); }
-  to   { opacity: 1;   transform: translateY(0); }
-}
-@keyframes glow-orange {
-  0%, 100% { text-shadow: 0 0 10px var(--pyth-orange-glow); }
-  50%       { text-shadow: 0 0 25px var(--pyth-orange-glow), 0 0 40px rgba(230, 130, 30, 0.15); }
+/* ---- Glassmorphism (Glass & Gradient Rule) ---- */
+.glass-effect {
+  backdrop-filter: blur(20px);
+  background: rgba(250, 248, 255, 0.8);
+  border: 1px solid var(--outline-variant);
 }
 
-/* ---- Utility Classes ---- */
-.text-orange  { color: var(--pyth-orange); }
-.text-green   { color: var(--green-safe); }
-.text-red     { color: var(--red-danger); }
-.text-muted   { color: var(--text-muted); }
-.text-secondary { color: var(--text-secondary); }
-
-.glow-orange { animation: glow-orange 2.5s ease-in-out infinite; }
-
-.divider {
-  width: 100%;
-  height: 1px;
-  background: var(--border-glass);
-  margin: 16px 0;
+/* ---- Animations ---- */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
 }
 
-/* ---- Recharts overrides ---- */
-.recharts-cartesian-grid-horizontal line,
-.recharts-cartesian-grid-vertical line {
-  stroke: rgba(255, 255, 255, 0.04);
+.status-orb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
 }
-.recharts-tooltip-wrapper {
-  outline: none;
+
+.status-safe { background: var(--primary); box-shadow: 0 0 15px var(--primary-container); }
+.status-danger { background: var(--error); box-shadow: 0 0 15px var(--error-container); }
+
+/* ---- Profile & Notifications ---- */
+.profile-pic {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface-container);
+  transition: transform var(--transition-base);
+}
+
+.profile-pic:hover {
+  transform: scale(1.05);
+}
+
+.notification-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-base);
+  border: none;
+}
+
+.notification-btn:hover {
+  background: var(--surface-container);
+}
+
+.notification-dot {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  background: var(--error);
+  border-radius: 50%;
+  border: 2px solid var(--surface-container-lowest);
+}
+
+/* ---- Recharts Overrides ---- */
+.recharts-cartesian-grid-horizontal line {
+  stroke: var(--surface-container);
+}
+.recharts-tooltip-cursor {
+  stroke: var(--primary-container);
+  stroke-dasharray: 4 4;
 }
