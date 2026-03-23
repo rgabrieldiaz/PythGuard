@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   createChart,
   IChartApi,
@@ -16,7 +16,17 @@ interface TradingChartProps {
   isTriggered: boolean;
 }
 
-const ORACLE_DELAY = 6;
+const ORACLE_DELAY = 6; // ticks (6 × 400ms = 2.4s de desventaja del oráculo estándar)
+
+const TIMEFRAMES = [
+  { label: "1m",  ticks: 150   },
+  { label: "5m",  ticks: 750   },
+  { label: "15m", ticks: 2250  },
+  { label: "30m", ticks: 4500  },
+  { label: "1H",  ticks: 9000  },
+  { label: "4H",  ticks: 36000 },
+  { label: "1D",  ticks: 216000},
+] as const;
 
 function getTheme() {
   const isLight = document.documentElement.getAttribute("data-theme") === "light";
@@ -40,6 +50,16 @@ function toTime(index: number): UTCTimestamp {
 }
 
 export default function TradingChart({ data, threshold, isTriggered }: TradingChartProps) {
+  const [activeTF, setActiveTF] = useState<string>("5m");
+
+  const zoomToTF = (label: string, ticks: number) => {
+    setActiveTF(label);
+    const chart = priceChartRef.current;
+    if (!chart || data.length === 0) return;
+    const to   = data.length - 1;
+    const from = Math.max(0, to - ticks);
+    chart.timeScale().setVisibleRange({ from: from as UTCTimestamp, to: to as UTCTimestamp });
+  };
   const priceRef  = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
 
@@ -216,8 +236,16 @@ export default function TradingChart({ data, threshold, isTriggered }: TradingCh
   const pct   = prevPrice > 0 ? (delta / prevPrice) * 100 : 0;
   const isUp  = delta >= 0;
 
+  // Pyth lead: cuántos ms de ventaja tiene Pyth sobre el oráculo estándar
+  const pythLeadMs = ORACLE_DELAY * 400;
+  const pythLeadPrice = data.length >= ORACLE_DELAY + 1
+    ? latestPrice - data[data.length - 1 - ORACLE_DELAY].price
+    : 0;
+
   return (
     <div className="chart-panel">
+
+      {/* ── Barra superior: precio + leyendas ── */}
       <div className="chart-header">
         <div>
           <span style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--on-surface)" }}>
@@ -238,7 +266,7 @@ export default function TradingChart({ data, threshold, isTriggered }: TradingCh
           </div>
         </div>
         <div style={{ flex: 1 }} />
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <div className="chart-legend-item">
             <div className="legend-line" style={{ background: "var(--chart-pyth)" }} />
             <span>Precio Pyth</span>
@@ -247,10 +275,66 @@ export default function TradingChart({ data, threshold, isTriggered }: TradingCh
             <div className="legend-line" style={{ borderTop: "1px dashed var(--chart-oracle)", height: "1px" }} />
             <span>Oráculo (retardado)</span>
           </div>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", padding: "0.2rem 0.5rem", background: "var(--surface-container)", borderRadius: "4px", color: "var(--on-surface)" }}>
-            400ms · Canvas
+
+          {/* ⚡ Ventaja de velocidad Pyth */}
+          <div style={{
+            display: "flex", alignItems: "center", gap: "0.35rem",
+            padding: "0.2rem 0.6rem",
+            background: "rgba(124,92,250,0.12)",
+            border: "1px solid rgba(124,92,250,0.35)",
+            borderRadius: "20px",
+            fontFamily: "var(--font-mono)",
+            fontSize: "0.7rem",
+            color: "var(--chart-pyth)",
+          }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--chart-pyth)", boxShadow: "0 0 6px var(--chart-pyth)", animation: "pulse 1.2s ease-in-out infinite", flexShrink: 0 }} />
+            <span style={{ fontWeight: 700 }}>⚡ {pythLeadMs}ms</span>
+            <span style={{ color: "var(--on-surface)", fontWeight: 400 }}>adelanto vs oráculo</span>
+            {pythLeadPrice !== 0 && (
+              <span style={{ color: pythLeadPrice > 0 ? "var(--buy)" : "var(--sell)", fontWeight: 600 }}>
+                ({pythLeadPrice > 0 ? "+" : ""}{pythLeadPrice.toFixed(4)})
+              </span>
+            )}
+          </div>
+
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", padding: "0.2rem 0.5rem", background: "var(--surface-container)", borderRadius: "4px", color: "var(--on-surface)" }}>
+            Canvas · 60fps
           </span>
         </div>
+      </div>
+
+      {/* ── Pills de temporalidad ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: "0.3rem",
+        padding: "0.45rem 1rem",
+        borderBottom: "1px solid var(--outline)",
+        flexShrink: 0,
+      }}>
+        {TIMEFRAMES.map(({ label, ticks }) => (
+          <button
+            key={label}
+            onClick={() => zoomToTF(label, ticks)}
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.72rem",
+              fontWeight: activeTF === label ? 700 : 500,
+              padding: "0.2rem 0.6rem",
+              borderRadius: "20px",
+              border: activeTF === label ? "1px solid var(--chart-pyth)" : "1px solid transparent",
+              background: activeTF === label ? "rgba(124,92,250,0.15)" : "transparent",
+              color: activeTF === label ? "var(--chart-pyth)" : "var(--on-surface)",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+              letterSpacing: "0.04em",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+        <div style={{ flex: 1 }} />
+        <span style={{ fontSize: "0.65rem", color: "var(--on-surface)", fontFamily: "var(--font-mono)", opacity: 0.6 }}>
+          {data.length} ticks · ~{(data.length * 0.4 / 60).toFixed(1)} min de datos
+        </span>
       </div>
 
       {/* Price chart — 65% */}
